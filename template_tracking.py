@@ -79,44 +79,38 @@ class App:
                 gt_box, gt_center, gt_wh, gt_vel = self.get_groundtruth(objlist[0][1].attrib)
 
                 th, tw = self.template.shape
-
-                # æ ¹æ®use_gaussianå†³å®šæ˜¯å¦ä½¿ç”¨é«˜æ–¯æƒé‡
+é‡
                 if self.use_gaussian:
-                    # åˆ›å»ºé«˜æ–¯åŠ æƒmask
                     y, x = np.ogrid[:th, :tw]
                     cy, cx = th / 2, tw / 2
 
-                    # sigma = 1/5 of template size
+
                     sigma_y = th / 10.0
                     sigma_x = tw / 10.0
 
-                    # 2Dé«˜æ–¯æƒé‡
                     weights = np.exp(-((x - cx) ** 2 / (2 * sigma_x ** 2) +
                                        (y - cy) ** 2 / (2 * sigma_y ** 2)))
 
-                    # è½¬æ¢ä¸º32ä½æµ®ç‚¹æ•°
-                    weights = np.float32(weights)
 
-                    # ä½¿ç”¨é«˜æ–¯åŠ æƒçš„æ¨¡æ¿åŒ¹é…
+                    weights = np.float32(weights)
+
                     res = cv2.matchTemplate(np.float32(gray),
                                             np.float32(self.template),
                                             cv2.TM_CCOEFF_NORMED,
                                             mask=weights)
                 else:
-                    # ä¸ä½¿ç”¨é«˜æ–¯æƒé‡
                     res = cv2.matchTemplate(gray, self.template, cv2.TM_CCOEFF_NORMED)
 
                 hg, wg = res.shape
 
-                # é¢„æµ‹çš„ä¸­å¿ƒä½ç½®
+
                 predicted_cx = self.center[0] + self.direction[0]
                 predicted_cy = self.center[1] + self.direction[1]
 
-                # å°†ä¸­å¿ƒä½ç½®è½¬æ¢ä¸ºå·¦ä¸Šè§’ä½ç½®
+
                 predicted_left = predicted_cx - tw / 2
                 predicted_top = predicted_cy - th / 2
 
-                # æœç´¢æ¡†ï¼ˆåœ¨resçš„åæ ‡ç³»ä¸­ï¼‰
                 ms_box = [
                     int(max(0, predicted_left - self.max_search[0])),
                     int(max(0, predicted_top - self.max_search[1])),
@@ -124,7 +118,7 @@ class App:
                     int(min(hg, predicted_top + self.max_search[1])),
                 ]
 
-                # åˆ›å»ºæœç´¢åŒºåŸŸmask
+
                 mask = np.zeros_like(res)
                 if ms_box[2] > ms_box[0] and ms_box[3] > ms_box[1]:
                     mask[ms_box[1]:ms_box[3], ms_box[0]:ms_box[2]] = 1
@@ -142,7 +136,6 @@ class App:
 
                 self.update_state(cx, cy, gray, update_template=False)
 
-                # ç»˜åˆ¶è¾¹ç•Œæ¡†å’Œè½¨è¿¹
                 box = [int(x) for x in self.box]
                 cv2.rectangle(vis, (box[0], box[1]), (box[2], box[3]),
                               (0, 0, 255), 1)
@@ -206,14 +199,13 @@ def main():
     tree = ET.parse(xmlf)
     ground_truth = tree.getroot()
 
-    # æ ¹æ®æ•°æ®é›†ç±»åž‹è‡ªåŠ¨é€‰æ‹©ç­–ç•¥
     if "walk" in path.lower() or "wk" in xmlf.lower():
         max_search = [32, 32]
-        use_gaussian = False  # Walk3ä¸ä½¿ç”¨é«˜æ–¯æƒé‡
+        use_gaussian = False 
         print("Detected Walk3 dataset: max_search=[32, 32], Gaussian=OFF")
     else:
         max_search = [100, 100]
-        use_gaussian = True  # Aquariumä½¿ç”¨é«˜æ–¯æƒé‡
+        use_gaussian = True  
         print("Detected fish dataset: max_search=[100, 100], Gaussian=ON")
 
     App(max_search, use_gaussian).run(images, ground_truth)
